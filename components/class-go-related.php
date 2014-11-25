@@ -20,6 +20,14 @@ class GO_Related
 	}//end widgets_init
 
 	/**
+	 * hooked to posts_distinct to make the query return distinct posts
+	 */
+	public function posts_distinct()
+	{
+		return 'DISTINCT';
+	}//end posts_distinct
+
+	/**
 	 * get related posts as a WP_Query
 	 */
 	public function get_related_posts( $post_id )
@@ -50,7 +58,7 @@ class GO_Related
 	/**
 	 * get related post ids
 	 */
-	public function get_related_post_ids( $post_id )
+	private function get_related_post_ids( $post_id )
 	{
 		global $wpdb;
 
@@ -91,7 +99,7 @@ class GO_Related
 	/**
 	 * get related post query
 	 */
-	public function get_related_posts_query( $post_id )
+	private function get_related_posts_query( $post_id )
 	{
 		global $wpdb;
 
@@ -146,14 +154,6 @@ class GO_Related
 
 		return $query;
 	}//end get_related_posts_query
-
-	/**
-	 * hooked to posts_distinct to make the query return distinct posts
-	 */
-	public function posts_distinct()
-	{
-		return 'DISTINCT';
-	}//end posts_distinct
 }//end class
 
 function go_related()
