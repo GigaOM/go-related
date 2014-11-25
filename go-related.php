@@ -7,4 +7,4 @@
  */
 
 require_once __DIR__ . '/components/class-go-related.php';
-new go_related();
+go_related();
