@@ -71,7 +71,8 @@ class GO_Related
 			! count( $ids['related_ids'] )
 			|| (
 				isset( $ids['created_date'] ) &&
-				$ids['created_date'] + ( 60 * 60 * 2 ) < time()
+				// older than 2 hours?
+				$ids['created_date'] + 7200 < time()
 			)
 		)
 		{
