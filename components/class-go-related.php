@@ -32,23 +32,23 @@ class GO_Related
 	 */
 	public function get_related_posts( $post_id )
 	{
-		$ids = $this->get_related_post_ids( $post_id );
-
-		if ( empty( $ids['related_ids'] ) )
-		{
-			return;
-		}//end if
-
-		// merge and unique the batch
-		$ids = array_unique( $ids['related_ids'] );
-
 		$params = array(
-			'post__in' => $ids,
 			'posts_per_page' => 2,
 			'ignore_sticky_posts' => TRUE,
-			'orderby' => 'post__in',
 			'suppress_filters' => TRUE,
 		);
+
+		$ids = $this->get_related_post_ids( $post_id );
+
+		// if there are related post ids, let's use those rather than the default loop
+		if ( ! empty( $ids['related_ids'] ) )
+		{
+			// merge and unique the batch
+			$ids = array_unique( $ids['related_ids'] );
+
+			$params['post__in'] = $ids;
+			$params['orderby'] = 'post__in';
+		}//end if
 
 		$query = new WP_Query( $params );
 
@@ -104,9 +104,10 @@ class GO_Related
 	{
 		global $wpdb;
 
+		// if there isn't a post id set, set it to 0
 		if ( ! ( $post_id = absint( $post_id ) ) )
 		{
-			return FALSE;
+			$post_id = 0;
 		}//end if
 
 		$taxonomies = array( 'post_tag' );
@@ -121,23 +122,32 @@ class GO_Related
 			}//end foreach
 		}//end if
 
+		$ttids = array();
+		$channel = NULL;
+
 		$taxonomies = array_filter( array_map( array( &$wpdb, 'escape' ), $taxonomies ) );
 
-		if ( ! count( $taxonomies ) )
+		// if we have a legit post id, fetch the ttids and channel
+		if ( $post_id )
 		{
-			return FALSE;
-		}// end if
+			// if there are taxonomies, let's grab the term_taxonomy_ids of the post's taxonomy terms
+			if ( count( $taxonomies ) )
+			{
+				$ttids = wp_get_object_terms( $post_id, $taxonomies, array( 'fields' => 'tt_ids' ) );
+			}// end if
 
-		$channel = wp_get_object_terms( $post_id, 'primary_channel', array( 'fields' => 'tt_ids' ) );
-
-		if ( ! $channel )
-		{
-			return FALSE;
+			// let's try and grab the primary channel from the post as well
+			$channel = wp_get_object_terms( $post_id, 'primary_channel', array( 'fields' => 'tt_ids' ) );
 		}//end if
 
-		$ttids = wp_get_object_terms( $post_id, $taxonomies, array( 'fields' => 'tt_ids' ) );
+		// if there isn't a primary channel, use the tech channel (example: attachments don't have primary channels)
+		if ( ! $channel )
+		{
+			$channel = get_term_by( 'slug', 'tech', 'primary_channel' );
+			$channel = array( $channel->term_taxonomy_id );
+		}//end if
 
-		// this will cause every channel post to count as 1 hit
+		// let's add the primary channel to the ttids array. this will cause every channel post to count as 1 hit
 		$ttids = array_merge( $ttids, $channel );
 
 		$query = "

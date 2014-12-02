@@ -31,6 +31,11 @@ class GO_Related_Stories_Widget extends WP_Widget
 
 		$query = go_related()->get_related_posts( $post->ID );
 
+		if ( ! $query )
+		{
+			return;
+		}//end if
+
 		echo $args['before_widget'];
 
 		include __DIR__ . '/templates/related-stories.php';
