@@ -131,10 +131,11 @@ class GO_Related
 		if ( $post_id )
 		{
 			// if there are taxonomies, let's grab the term_taxonomy_ids of the post's taxonomy terms
-			if ( count( $taxonomies ) )
+			foreach ( $taxonomies as $taxonomy )
 			{
-				$ttids = wp_get_object_terms( $post_id, $taxonomies, array( 'fields' => 'tt_ids' ) );
-			}// end if
+				$term_taxonomy_ids = wp_list_pluck( get_the_terms( $post_id, $taxonomy ), 'term_taxonomy_id' );
+				$ttids = array_merge( $ttids, $term_taxonomy_ids );
+			}//end foreach
 
 			// let's try and grab the primary channel from the post as well
 			$channel = wp_list_pluck( get_the_terms( $post_id, 'primary_channel' ), 'term_taxonomy_id' );
