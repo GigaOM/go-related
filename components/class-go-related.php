@@ -133,8 +133,8 @@ class GO_Related
 			// if there are taxonomies, let's grab the term_taxonomy_ids of the post's taxonomy terms
 			foreach ( $taxonomies as $taxonomy )
 			{
-				$taxonomy_term_ids = wp_list_pluck( get_the_terms( $post_id, $taxonomy ), 'term_taxonomy_id' );
-				$ttids = array_merge( $ttids, $taxonomy_term_ids );
+				$term_taxonomy_ids = wp_list_pluck( get_the_terms( $post_id, $taxonomy ), 'term_taxonomy_id' );
+				$ttids = array_merge( $ttids, $term_taxonomy_ids );
 			}//end foreach
 
 			// let's try and grab the primary channel from the post as well
