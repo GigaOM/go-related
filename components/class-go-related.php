@@ -137,7 +137,7 @@ class GO_Related
 			}// end if
 
 			// let's try and grab the primary channel from the post as well
-			$channel = wp_get_object_terms( $post_id, 'primary_channel', array( 'fields' => 'tt_ids' ) );
+			$channel = wp_list_pluck( get_the_terms( $post_id, 'primary_channel' ), 'term_taxonomy_id' );
 		}//end if
 
 		// if there isn't a primary channel, use the tech channel (example: attachments don't have primary channels)
