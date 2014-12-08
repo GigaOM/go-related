@@ -64,7 +64,7 @@ class GO_Related
 
 		$post = get_post( $post_id );
 		$post_ids = array();
-		$ids = (array) get_post_meta( $post->ID, 'go_related_stories_posts', TRUE );
+		$ids = (array) get_post_meta( $post_id, 'go_related_stories_posts', TRUE );
 
 		if (
 			// try fetching from postmeta, make sure we have a current version of the array
@@ -76,7 +76,7 @@ class GO_Related
 			)
 		)
 		{
-			$query = $this->get_related_posts_query( $post->ID );
+			$query = $this->get_related_posts_query( $post_id );
 
 			if ( ! $query )
 			{
@@ -91,7 +91,7 @@ class GO_Related
 				'created_date' => time(),
 			);
 
-			update_post_meta( $post->ID, 'go_related_stories_posts', $ids );
+			update_post_meta( $post_id, 'go_related_stories_posts', $ids );
 		}// end if
 
 		return $ids;
@@ -133,7 +133,11 @@ class GO_Related
 			// if there are taxonomies, let's grab the term_taxonomy_ids of the post's taxonomy terms
 			foreach ( $taxonomies as $taxonomy )
 			{
-				$term_taxonomy_ids = wp_list_pluck( get_the_terms( $post_id, $taxonomy ), 'term_taxonomy_id' );
+				if ( ! $term_taxonomy_ids = wp_list_pluck( get_the_terms( $post_id, $taxonomy ), 'term_taxonomy_id' ) )
+				{
+					continue;
+				}//end if
+
 				$ttids = array_merge( $ttids, $term_taxonomy_ids );
 			}//end foreach
 
@@ -145,8 +149,11 @@ class GO_Related
 		if ( ! $channel )
 		{
 			$channel = get_term_by( 'slug', 'tech', 'primary_channel' );
-			$channel = array( $channel->term_taxonomy_id );
+			$channel = array( absint( $channel->term_taxonomy_id ) );
 		}//end if
+
+		$pro_channel = get_term_by( 'slug', 'pro', 'primary_channel' );
+		$pro_channel = absint( $pro_channel->term_taxonomy_id );
 
 		// let's add the primary channel to the ttids array. this will cause every channel post to count as 1 hit
 		$ttids = array_merge( $ttids, $channel );
@@ -159,10 +166,18 @@ class GO_Related
 					AND t_r.term_taxonomy_id IN (" . implode( $ttids, ',' ) . ")
 					AND p.post_status = 'publish'
 					AND p.post_type = 'post'
+					AND NOT EXISTS(
+						SELECT 1
+						FROM {$wpdb->term_relationships} t_r2
+						WHERE t_r2.object_id = p.ID
+							AND t_r2.term_taxonomy_id = %d
+					)
 				GROUP BY p.ID
 				ORDER BY hits DESC, p.post_date_gmt DESC
 				LIMIT 15
 		";
+
+		$query = $wpdb->prepare( $query, $pro_channel );
 
 		return $query;
 	}//end get_related_posts_query
