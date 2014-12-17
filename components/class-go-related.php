@@ -110,41 +110,31 @@ class GO_Related
 			$post_id = 0;
 		}//end if
 
-		$taxonomies = array( 'post_tag' );
-
-		if ( function_exists( 'go_taxonomy' ) )
-		{
-			$taxonomy_slugs = array_keys( go_taxonomy()->config['register_taxonomies'] );
-
-			foreach ( $taxonomy_slugs as $taxonomy )
-			{
-				$taxonomies[] = $taxonomy;
-			}//end foreach
-		}//end if
-
 		$ttids = array();
 		$channel = NULL;
-
-		$taxonomies = array_filter( array_map( array( &$wpdb, 'escape' ), $taxonomies ) );
 
 		// if we have a legit post id, fetch the ttids and channel
 		if ( $post_id )
 		{
-			// if there are taxonomies, let's grab the term_taxonomy_ids of the post's taxonomy terms
-			foreach ( $taxonomies as $taxonomy )
+			// get top 6 most popular terms on the post
+			if ( function_exists( 'go_taxonomy' ) )
 			{
-				if ( ! $term_taxonomy_ids = wp_list_pluck( get_the_terms( $post_id, $taxonomy ), 'term_taxonomy_id' ) )
-				{
-					continue;
-				}//end if
+				$term_args = array(
+					'taxonomies' => array(
+						'technology',
+						'company',
+						'post_tag',
+						'person',
+					),
+					'number'  => 6,
+					'format'  => 'object',
+					'orderby' => 'name',
+					'order'   => 'ASC',
+				);
 
-				if ( ! is_array( $term_taxonomy_ids ) )
-				{
-					continue;
-				} // END if
-
-				$ttids = array_merge( $ttids, $term_taxonomy_ids );
-			}//end foreach
+				$terms = go_taxonomy()->sorted_terms( $post_id, $term_args );
+				$ttids = wp_list_pluck( $terms, 'term_taxonomy_id' );
+			}//end if
 
 			// let's try and grab the primary channel from the post as well
 			$channel = wp_list_pluck( get_the_terms( $post_id, 'primary_channel' ), 'term_taxonomy_id' );
