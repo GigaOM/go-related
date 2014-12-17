@@ -138,6 +138,11 @@ class GO_Related
 					continue;
 				}//end if
 
+				if ( ! is_array( $term_taxonomy_ids ) )
+				{
+					continue;
+				} // END if
+
 				$ttids = array_merge( $ttids, $term_taxonomy_ids );
 			}//end foreach
 
