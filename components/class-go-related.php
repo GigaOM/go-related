@@ -33,7 +33,7 @@ class GO_Related
 	public function get_related_posts( $post_id )
 	{
 		$params = array(
-			'posts_per_page' => 2,
+			'posts_per_page' => 3,
 			'ignore_sticky_posts' => TRUE,
 			'suppress_filters' => TRUE,
 		);
