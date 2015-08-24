@@ -25,44 +25,28 @@ class GO_Related
 	public function get_related_posts( $post_id )
 	{
 		$params = array(
-			'posts_per_page' => 5,
+			'posts_per_page' => 2,
 			'ignore_sticky_posts' => TRUE,
 			'suppress_filters' => TRUE,
 		);
 
-		$ids = $this->get_related_post_ids( $post_id );
+		// retrieve related post IDs.  these are pre-assigned via a batch process.
+		$ids = (array) get_post_meta( $post_id, 'go_related_stories_posts', TRUE );
 
-		// if there are related post ids, let's use those rather than the default loop
+		// if there are related posts, let's use those rather than the default loop
 		if ( ! empty( $ids['related_ids'] ) )
 		{
 			// merge and unique the batch
-			$ids = array_unique( $ids['related_ids'] );
+			$ids = shuffle(array_unique( $ids['related_ids'] ));
 
 			$params['post__in'] = $ids;
 			$params['orderby'] = 'post__in';
 		}//end if
 
-		// this post has no pre-defined ralated posts, so grab some defaults
 		$query = new WP_Query( $params );
 
 		return $query;
 	}//end get_related_posts
-
-	/**
-	 * get related post ids
-	 */
-	private function get_related_post_ids( $post_id )
-	{
-		// most posts will have pre-assigned related posts that are assigned via a batch process
-		$ids = (array) get_post_meta( $post_id, 'go_related_stories_posts', TRUE );
-
-		// if this post does not have pre-assigned related posts, then use curated posts instead
-//		if ( empty( $ids )) {
-//			$ids = go_curated()
-//		}
-
-		return $ids;
-	}//end get_related_post_ids
 
 }//end class
 
