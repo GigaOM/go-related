@@ -24,29 +24,43 @@ class GO_Related
 	 */
 	public function get_related_posts( $post_id )
 	{
+		$num_related_posts = 2;
+
 		$params = array(
-			'posts_per_page' => 2,
+			'posts_per_page' => $num_related_posts,
 			'ignore_sticky_posts' => TRUE,
 			'suppress_filters' => TRUE,
 		);
 
-		// retrieve related post IDs.  these are pre-assigned via a batch process.
-		$ids = (array) get_post_meta( $post_id, 'go_related_stories_posts', TRUE );
+		$ids = $this->get_related_post_ids($post_id, $num_related_posts);
 
 		// if there are related posts, let's use those rather than the default loop
-		if ( ! empty( $ids['related_ids'] ) )
+		if ( ! empty( $ids ) )
 		{
-			// merge and unique the batch
-			$ids = shuffle(array_unique( $ids['related_ids'] ));
-
 			$params['post__in'] = $ids;
-			$params['orderby'] = 'post__in';
-		}//end if
+		}
 
 		$query = new WP_Query( $params );
 
 		return $query;
 	}//end get_related_posts
+
+	private function get_related_post_ids( $post_id, $num_related_posts )
+	{
+		// retrieve related post IDs.  these are pre-assigned via a batch process.
+		$related_meta = (array) get_post_meta( $post_id, 'go_related_stories_posts', TRUE );
+
+		if ( ! empty( $related_meta['related_ids'] ) ) {
+			// randomize available items for variety
+			$related_ids = $related_meta['related_ids'];
+			shuffle($related_ids);
+
+			// select specified number of ids from randomized list
+			$ids = array_slice($related_ids, 0, $num_related_posts);
+		}
+
+		return $ids;
+	}//end get_related_posts_ids
 
 }//end class
 
